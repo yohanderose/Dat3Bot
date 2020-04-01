@@ -4,9 +4,9 @@ import random
 
 
 #   TODO: 
-#       - Add README
 #       - Provide support for Bumble and others services 
-#       - Sometimes the google login option isn't available
+#       - Sometimes the google login option isn't available 
+#       - Test on Linux
 
 class Bot():
     def __init__(self):
