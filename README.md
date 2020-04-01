@@ -4,13 +4,13 @@ Python bot that automates the tedious parts of popular dating apps ie. Tinder or
 
 ## Dependencies
 
-- windows 10
+- Windows 10
 - python3
 - selenium
 
 ## Getting Started
 
-- Before use you'll have to add Dat3Bot\chromedriver_win32 to your PATH variable.
+- Before use, you'll have to add Dat3Bot\chromedriver_win32 to your PATH variable.
 
 ## Run
 

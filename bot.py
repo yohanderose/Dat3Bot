@@ -3,10 +3,12 @@ import time
 import random
 
 
-#   TODO: 
+#   TODO:  
+#       - Create AI to simulate my attraction preferences when swiping
 #       - Provide support for Bumble and others services 
 #       - Sometimes the google login option isn't available 
-#       - Test on Linux
+#       - Test on Linux 
+#       - Make demo video
 
 class Bot():
     def __init__(self):
