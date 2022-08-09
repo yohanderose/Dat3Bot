@@ -1,13 +1,12 @@
 from bot import Bot
-from getpass import getpass
+# from getpass import getpass
+from credentials import email, pwd
 
-def main():
-    email = input("Email: ")
-    password = getpass("Password: ")
 
-    print("Initialising bot...")
-    bot = Bot()
-    bot.login(email, password)
+# email = input("Email: ")
+# password = getpass("Password: ")
+password = pwd
 
-if __name__ == "__main__":
-    main()
+print("Initialising bot...")
+bot = Bot()
+bot.login(email, password)
