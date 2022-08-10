@@ -1,4 +1,4 @@
-from bot import Bot
+from bot import *
 # from getpass import getpass
 from credentials import email, pwd
 
@@ -10,3 +10,4 @@ password = pwd
 print("Initialising bot...")
 bot = Bot()
 bot.login(email, password)
+bot.run()

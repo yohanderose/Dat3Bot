@@ -1,6 +1,7 @@
 credentials.py
 dataset/hot/*
 dataset/not/*
+true/
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,git
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,git

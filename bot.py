@@ -1,3 +1,7 @@
+import undetected_chromedriver.v2 as uc
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
 import random
@@ -16,7 +20,28 @@ GOOGLE_XPATH = '//*[@id="q-1173676276"]/div/div/div[1]/div/div/div[3]/span/div[1
 
 class Bot():
     def __init__(self):
-        self.driver = webdriver.Chrome()
+        capabilities = DesiredCapabilities().CHROME
+
+        chrome_options = uc.ChromeOptions()
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--lang=en-GB")
+
+        prefs = {
+            'profile.default_content_setting_values':
+            {
+                'notifications': 0,
+                'geolocation': 1
+            },
+
+            'profile.managed_default_content_settings':
+            {
+                'geolocation': 1
+            },
+        }
+
+        chrome_options.add_experimental_option('prefs', prefs)
+        capabilities.update(chrome_options.to_capabilities())
+        self.driver = uc.Chrome(options=chrome_options)
 
     def login(self, email, password):
         self.driver.get('https://tinder.com/')
@@ -24,70 +49,82 @@ class Bot():
 
         try:
             # Decline trackers and cookies
-            self.driver.find_element_by_xpath(
-                '//*[@id="q554704800"]/div/div[2]/div/div/div[1]/div[2]/button').click()
-            # Try login with Google
-            self.driver.find_element_by_xpath(
-                '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]').click()
-            time.sleep(2)
-            self.driver.find_element_by_xpath(
-                '//*[@id="q-1173676276"]/div/div/div[1]/div/div/div[3]/span/div[1]/div/button').click()
+            self.driver.find_element(
+                By.XPATH, '//*[@id="q554704800"]/div/div[2]/div/div/div[1]/div[1]/button').click()
+        except Exception as e:
+            print('No Cookie prompt found')
+        time.sleep(2)
 
-            time.sleep(1)
+        self.login_button = None
+        self.google_login_button = None
+
+        try:
+            self.login_button = self.driver.find_element(By.XPATH,
+                                                         '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]')
+            self.login_button.click()
+            time.sleep(2)
+            self.google_login_button = self.driver.find_element(By.CSS_SELECTOR,
+                                                                '[aria-label="Log in with Google"]')
+            self.google_login_button.click()
+        except Exception as e:
+            print("Couldn't open login portal... Trying again")
+            time.sleep(2)
+            self.google_login_button.click()
+            time.sleep(2)
+            self.google_login_button.click()
+
+        try:
+
             window_before = self.driver.window_handles[0]
             window_after = self.driver.window_handles[1]
-
             self.driver.switch_to.window(window_after)
-            self.driver.find_element_by_xpath(
-                '//*[@id="identifierId"]').send_keys(email)
-            self.driver.find_element_by_xpath(
-                '//*[@id="identifierNext"]/span').click()
+
+            self.driver.find_element(By.XPATH,
+                                     '//*[@id="identifierId"]').send_keys(email)
+            self.driver.find_element(By.XPATH,
+                                     '//*[@id="identifierNext"]/div/button').click()
             time.sleep(2)
-            self.driver.find_element_by_xpath(
-                '//*[@id="password"]/div[1]/div/div[1]/input').send_keys(password)
-            self.driver.find_element_by_xpath(
-                '//*[@id="passwordNext"]/span/span').click()
+
+            self.driver.find_element(By.XPATH,
+                                     '//*[@id="password"]/div[1]/div/div[1]/input').send_keys(password)
+            self.driver.find_element(By.XPATH,
+                                     '//*[@id="passwordNext"]/div/button').click()
+
+            wait = input('Log in, and press enter to continue...')
+
             self.driver.switch_to.window(window_before)
         except Exception as e:
-            print("ERROR:\tCould not find login method!!")
+            print("ERROR:\t Couldn't login with credentials.")
 
-        # time.sleep(3)
+    def run(self):
+        pass
+        # Allow location services
+        try:
+            self.driver.find_element(
+                By.CSS_SELECTOR, '[aria-label="Allow"]').click()
+        except Exception as e:
+            print("ERROR:\t Couldn't allow location services.")
+        time.sleep(2)
 
-        # # Allow cookies
-        # try:
-        #     self.driver.find_element_by_xpath(
-        #         '//*[@id="content"]/div/div[3]/div/div/div/button/span').click()
-        # except Exception as e:
-        #     print("ERROR:\t Couldn't allow cookies.")
+        # Disable notifications
+        try:
+            self.driver.find_element(
+                By.CSS_SELECTOR, '[aria-label="Not interested"]').click()
+        except Exception as e:
+            print("ERROR:\t Couldn't disable notifications.")
 
-        # time.sleep(2)
+        time.sleep(3)
 
-        # # Allow location services
-        # try:
-        #     self.driver.find_element_by_xpath(
-        #         '//*[@id="modal-manager"]/div/div/div/div/div[3]/button[1]/span').click()
-        # except Exception as e:
-        #     print("ERROR:\t Couldn't allow location services.")
-
-        # time.sleep(2)
-
-        # # Disable notifications
-        # try:
-        #     self.driver.find_element_by_xpath(
-        #         '//*[@id="modal-manager"]/div/div/div/div/div[3]/button[2]/span').click()
-        # except Exception as e:
-        #     print("ERROR:\t Couldn't disable notifications.")
-
-        # time.sleep(2)
-
-        # # Define swipe buttons
-        # try:
-        #     like = self.driver.find_element_by_xpath(
-        #         '//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div[2]/div[4]/button')
-        #     dislike = self.driver.find_element_by_xpath(
-        #         '//*[@id="content"]/div/div[1]/div/main/div[1]/div/div/div[1]/div[1]/div[2]/div[2]/button')
-        # except Exception as e:
-        #     print("ERROR:\t Couldn't assign like or dislike buttons.")
+        self.like = None
+        self.dislike = None
+        # Define swipe buttons
+        try:
+            self.like = self.driver.find_element(By.XPATH,
+                                                 '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
+            self.dislike = self.driver.find_element(By.XPATH,
+                                                    '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
+        except Exception as e:
+            print("ERROR:\t Couldn't assign like or dislike buttons.")
 
         # while True:
         #     time.sleep(1)
