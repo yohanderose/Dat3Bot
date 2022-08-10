@@ -1,3 +1,11 @@
+import os
+import pickle
+from build_dataset import img_to_feature_vec
+import uuid
+
+import shutil
+import re
+import requests
 import undetected_chromedriver.v2 as uc
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -5,17 +13,29 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 import time
 import random
+import PIL
+
+clf = pickle.load(open('./models/lr.sav', 'rb'))
 
 
-#   TODO:
-#       - Create AI to simulate my attraction preferences when swiping
-#       - Provide support for Bumble and others services
-#       - Sometimes the google login option isn't available
-#       - Test on Linux
-#       - Make demo video
+def download_image(url):
+    """
+    Download an image from a webp url and save it to a jpg.
+    """
+    response = requests.get(url, stream=True)
+    with open('test.webp', 'wb') as out_file:
+        shutil.copyfileobj(response.raw, out_file)
+        img = PIL.Image.open('test.webp').convert('RGB')
+        img.save('test.jpg', 'JPEG')
+    del response
+    os.remove('test.webp')
 
-LOGIN_XPATH = '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]'
-GOOGLE_XPATH = '//*[@id="q-1173676276"]/div/div/div[1]/div/div/div[3]/span/div[1]/div/button'
+
+def move_image(filename, new_filename):
+    """
+    Move an image from one location to another.
+    """
+    shutil.move(filename, new_filename)
 
 
 class Bot():
@@ -104,7 +124,7 @@ class Bot():
                 By.CSS_SELECTOR, '[aria-label="Allow"]').click()
         except Exception as e:
             print("ERROR:\t Couldn't allow location services.")
-        time.sleep(2)
+        time.sleep(1)
 
         # Disable notifications
         try:
@@ -113,7 +133,7 @@ class Bot():
         except Exception as e:
             print("ERROR:\t Couldn't disable notifications.")
 
-        time.sleep(3)
+        time.sleep(5)
 
         self.like = None
         self.dislike = None
@@ -124,22 +144,40 @@ class Bot():
             self.dislike = self.driver.find_element(By.XPATH,
                                                     '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
         except Exception as e:
-            print("ERROR:\t Couldn't assign like or dislike buttons.")
+            print("ERROR:\t Couldn't assign like or dislike buttons. Trying again ... ")
+            self.like = self.driver.find_element(By.XPATH,
+                                                 '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
+            self.dislike = self.driver.find_element(By.XPATH,
+                                                    '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
 
-        # while True:
-        #     time.sleep(1)
-        #     # Check for popups
-        #     try:
-        #         self.driver.find_element_by_xpath(
-        #             '//*[@id="modal-manager"]/div/div/div[2]/button[2]/span').click()
-        #         print("ALERT:\t Dealt with home screen popup.")
-        #     except Exception as e:
-        #         pass
+        while True:
 
-        #     time.sleep(1)
+            time.sleep(4)
 
-        #     test = random.random()
-        #     if test > 0.6:
-        #         like.click()
-        #     else:
-        #         dislike.click()
+            self.curr_img = self.driver.find_element(
+                By.XPATH, '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[3]/div[1]/div[1]/span[1]/div')
+            attr_str = self.curr_img.get_attribute('style')
+            # Use regex to extract background image url
+            url = re.findall(r'url\((.*?)\)', attr_str)[0][1:-1]
+            # print(url)
+
+            download_image(url)
+            time.sleep(2)
+            test = img_to_feature_vec('test.jpg', 'hot')
+
+            if test is not None:
+                test = test[:-1]
+
+                result = clf.predict([test])[0]
+
+                if result == 1:
+                    self.like.click()
+                    move_image('test.jpg', f'./dataset/hot/{uuid.uuid4()}.jpg')
+                else:
+                    self.dislike.click()
+                    move_image('test.jpg', f'./dataset/not/{uuid.uuid4()}.jpg')
+                continue
+
+            self.dislike.click()
+            os.remove('test.jpg')
+            time.sleep(random.randrange(3, 30) * .1)
