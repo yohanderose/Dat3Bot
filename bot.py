@@ -143,7 +143,7 @@ class Bot():
         except Exception as e:
             print("ERROR:\t Couldn't disable notifications.")
 
-        time.sleep(5)
+        time.sleep(6)
 
         self.like = None
         self.dislike = None
@@ -197,7 +197,7 @@ class Bot():
                 self.dislike.click()
                 time.sleep(random.randrange(3, 30) * .1)
             except Exception as e:
-                print("ERROR:\t Couldn't swipe. Trying again ...")
+                print("ERROR:\t Couldn't swipe... Press enter to resume ")
                 time.sleep(4)
 
             if os.path.exists('./test.jpg'):
