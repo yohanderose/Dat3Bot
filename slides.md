@@ -1,11 +1,9 @@
 ---
 title:
-- Automating Dating 
+- Optimising Dating 
 subtitle:
 - with Web Drivers and Machine Learning
 author:
-- yohanderose.dev/blog-slug
-date:
 - https://github.com/yohanderose/Dat3Bot
 theme:
 - Warsaw
@@ -21,11 +19,11 @@ colorlinks:
 
 # What is the aim?
 
-- True love uwu.
+- True love uwu
 
-- More realistically though -- some booty.
+- More realistically though -- some booty
 
-- Even more realistically, just optimising emotional investment.
+- Even more realistically, just optimising emotional investment
 
 
 You'll use selenium to interact with the tinder web app, and train a machine learning model on your attraction preferences to (hopefully accurately) decide on which way to swipe.
@@ -77,7 +75,7 @@ all_buttons = webdriver.find_elements_by_tag('button')
 	```bash
 	python3 -i main.py
 	``` 
-- Use the browser inspector to find web element info
+- Use the inspector in browser dev tools to find web element info
 
 # Making Models 
 

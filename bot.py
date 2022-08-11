@@ -81,6 +81,7 @@ class Bot():
             self.driver.find_element(
                 By.XPATH, f'//*[@id="{self.session_id}"]/div/div[2]/div/div/div[1]/div[1]/button').click()
 
+        time.sleep(2)
         self.login_button = None
         self.google_login_button = None
 
@@ -197,8 +198,8 @@ class Bot():
                 self.dislike.click()
                 time.sleep(random.randrange(3, 30) * .1)
             except Exception as e:
-                print("ERROR:\t Couldn't swipe... Press enter to resume ")
-                time.sleep(4)
+                wait = input(
+                    "ERROR:\t Couldn't swipe... Press enter to resume ")
 
             if os.path.exists('./test.jpg'):
                 os.remove('./test.jpg')
