@@ -28,7 +28,6 @@ def download_image(url):
         img = PIL.Image.open('test.webp').convert('RGB')
         img.save('test.jpg', 'JPEG')
     del response
-    os.remove('test.webp')
 
 
 def move_image(filename, new_filename):
@@ -65,22 +64,29 @@ class Bot():
 
     def login(self, email, password):
         self.driver.get('https://tinder.com/')
-        time.sleep(2)
+        time.sleep(3)
+
+        # Store unique session id
+        self.session_id = self.driver.find_elements(
+            By.TAG_NAME, 'div')[0].get_attribute('id')
+        # print(self.session_id)
 
         try:
             # Decline trackers and cookies
             self.driver.find_element(
-                By.XPATH, '//*[@id="q554704800"]/div/div[2]/div/div/div[1]/div[1]/button').click()
+                By.XPATH, f'//*[@id="{self.session_id}"]/div/div[2]/div/div/div[1]/div[1]/button').click()
         except Exception as e:
-            print('No Cookie prompt found')
-        time.sleep(2)
+            print('No Cookie prompt found... Trying again.')
+            time.sleep(2)
+            self.driver.find_element(
+                By.XPATH, f'//*[@id="{self.session_id}"]/div/div[2]/div/div/div[1]/div[1]/button').click()
 
         self.login_button = None
         self.google_login_button = None
 
         try:
             self.login_button = self.driver.find_element(By.XPATH,
-                                                         '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]')
+                                                         f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]')
             self.login_button.click()
             time.sleep(2)
             self.google_login_button = self.driver.find_element(By.CSS_SELECTOR,
@@ -89,9 +95,13 @@ class Bot():
         except Exception as e:
             print("Couldn't open login portal... Trying again")
             time.sleep(2)
-            self.google_login_button.click()
+            self.login_button = self.driver.find_element(By.XPATH,
+                                                         f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div[2]/div/div[3]/div/div/button[2]')
+            self.login_button.click()
             time.sleep(2)
-            self.google_login_button.click()
+            self.google_login_button = self.driver.find_element(By.CSS_SELECTOR,
+                                                                '[aria-label="Log in with Google"]')
+        time.sleep(2)
 
         try:
 
@@ -140,44 +150,55 @@ class Bot():
         # Define swipe buttons
         try:
             self.like = self.driver.find_element(By.XPATH,
-                                                 '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
+                                                 f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
             self.dislike = self.driver.find_element(By.XPATH,
-                                                    '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
+                                                    f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
         except Exception as e:
             print("ERROR:\t Couldn't assign like or dislike buttons. Trying again ... ")
             self.like = self.driver.find_element(By.XPATH,
-                                                 '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
+                                                 f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[4]/button')
             self.dislike = self.driver.find_element(By.XPATH,
-                                                    '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
+                                                    f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div/div/div/div[4]/div/div[2]/button')
 
         while True:
 
-            time.sleep(4)
+            try:
+                time.sleep(4)
 
-            self.curr_img = self.driver.find_element(
-                By.XPATH, '//*[@id="q554704800"]/div/div[1]/div/div/main/div/div/div/div/div[3]/div[1]/div[1]/span[1]/div')
-            attr_str = self.curr_img.get_attribute('style')
-            # Use regex to extract background image url
-            url = re.findall(r'url\((.*?)\)', attr_str)[0][1:-1]
-            # print(url)
+                self.curr_img = self.driver.find_element(
+                    By.XPATH, f'//*[@id="{self.session_id}"]/div/div[1]/div/div/main/div/div/div/div/div[3]/div[1]/div[1]/span[1]/div')
+                attr_str = self.curr_img.get_attribute('style')
+                # Use regex to extract background image url
+                url = re.findall(r'url\((.*?)\)', attr_str)[0][1:-1]
+                # print(url)
 
-            download_image(url)
-            time.sleep(2)
-            test = img_to_feature_vec('test.jpg', 'hot')
+                print('Downloading image... ', end='')
+                download_image(url)
+                time.sleep(2)
+                print('OK')
 
-            if test is not None:
-                test = test[:-1]
+                test = img_to_feature_vec('test.jpg', 'hot')
 
-                result = clf.predict([test])[0]
+                if test is not None:
+                    test = test[:-1]
 
-                if result == 1:
-                    self.like.click()
-                    move_image('test.jpg', f'./dataset/hot/{uuid.uuid4()}.jpg')
-                else:
-                    self.dislike.click()
-                    move_image('test.jpg', f'./dataset/not/{uuid.uuid4()}.jpg')
-                continue
+                    result = clf.predict([test])[0]
 
-            self.dislike.click()
-            os.remove('test.jpg')
-            time.sleep(random.randrange(3, 30) * .1)
+                    if result == 1:
+                        self.like.click()
+                        move_image(
+                            'test.jpg', f'./dataset/hot/{uuid.uuid4()}.jpg')
+                    else:
+                        self.dislike.click()
+                        move_image(
+                            'test.jpg', f'./dataset/not/{uuid.uuid4()}.jpg')
+                    continue
+
+                self.dislike.click()
+                time.sleep(random.randrange(3, 30) * .1)
+            except Exception as e:
+                print("ERROR:\t Couldn't swipe. Trying again ...")
+                time.sleep(4)
+
+            if os.path.exists('./test.jpg'):
+                os.remove('./test.jpg')
